@@ -4,8 +4,8 @@
  * Depends: Woocommerce, Woocommerce Boleto
  * Plugin URI: http://www.agenciamagma.com.br
  * Description: Send email to on-hold boleto orders with few days left to pay.
- * Version: 1.0.0
- * Author: Carlos Cardoso Dias
+ * Version: 1.0.1
+ * Author: agenciamagma
  * Author URI: http://agenciamagma.com.br
  * License: GPL2
  */
@@ -19,8 +19,8 @@ if (!class_exists('AG_Magma_Lembrete_Boleto')):
 
 class AG_Magma_Lembrete_Boleto {
 
-	const VERSION = '1.0.0';
-	const DAYS_TO_EXPIRE = 2;
+	const VERSION = '1.0.1';
+	const DAYS_TO_EXPIRE = 1;
 
 	private static $instance = null;
 
@@ -37,7 +37,7 @@ class AG_Magma_Lembrete_Boleto {
 	}
 
 	public static function activation() {
-		wp_schedule_event(strtotime('2014-12-03 00:00:00'), 'daily', 'ag-magma-lembrete-boleto-verify-orders');
+		wp_schedule_event(strtotime(date('Y-m-d') . ' 00:00:00'), 'daily', 'ag-magma-lembrete-boleto-verify-orders');
 	}
 
 	public static function deactivation() {
@@ -53,39 +53,38 @@ class AG_Magma_Lembrete_Boleto {
 		$start_date = date('Y-m-d', strtotime(date('Y-m-d') . ' - ' . $expiration_time . ' days'));
 		$end_date = date('Y-m-d', strtotime(date('Y-m-d') . ' - ' . ($expiration_time - self::DAYS_TO_EXPIRE) . ' days'));
 
-		// obter ordens prestes à expirar
-		$orders_id = $this->get_all_onhold_boleto_orders_id_between($start_date, $end_date);
-
-		// formatar e enviar os emails
-		foreach ($orders_id as $order_id) {
-			$order = new WC_Order($order_id);
-			
+		// formatar e enviar os emails para as ordens específicas
+		foreach ($this->get_all_onhold_boleto_orders_between($start_date, $end_date) as $order) {
 			$days_left = $expiration_time - intval(date('d', time() - strtotime($order->order_date)));
 
 			if ($days_left < 0) {
 				continue;
 			}
 
-			$msg = 'Olá, ' . $order->get_user()->first_name . '.<br />';
+			$post_meta = get_post_meta($order->id);
+			$user_email = $post_meta['_billing_email'][0];
+			$user_first_name = $post_meta['_billing_first_name'][0];
+
+			$msg = 'Olá, ' . $user_first_name . '.<br />';
 
 			switch($days_left) {
 				case 0:
-					$msg .= "Seu boleto expira hoje.<br />";
+					$msg .= "Seu boleto expira hoje.";
 				break;
 				case 1:
-					$msg .= "Falta " . $days_left . " dia para o seu boleto expirar.<br />";
+					$msg .= "Falta " . $days_left . " dia para o seu boleto expirar.";
 				break;
 				default:
-					$msg .= "Faltam " . $days_left . " dias para o seu boleto expirar.<br />";
+					$msg .= "Faltam " . $days_left . " dias para o seu boleto expirar.";
 			}
 
-			$msg .= 'Acesse seu boleto <a href="' . WC_Boleto::get_boleto_url($order->order_key) . '?utm_source=recupera-boleto&utm_medium=boleto&utm_campaign=recupera-boleto-' . date('d-m-Y') . '">aqui</a>.';
+			$msg .= '<br />Acesse seu boleto <a href="' . WC_Boleto::get_boleto_url($order->order_key) . '">aqui</a>.';
 			
-			wc_mail($order->get_user()->user_email, get_bloginfo('name'), $msg);
+			wc_mail($user_email, get_bloginfo('name'), $msg);
 		}
 	}
 
-	private function get_all_onhold_boleto_orders_id_between($start_date, $end_date) {
+	private function get_all_onhold_boleto_orders_between($start_date, $end_date) {
 		$start_date = explode('-', $start_date);
 		$end_date = explode('-', $end_date);
 
@@ -98,33 +97,38 @@ class AG_Magma_Lembrete_Boleto {
 		$end_day = $end_date[2];
 		
 		$orders = array();
-
-    	$args = array(
-    		'numberposts'        => -1,
-    	    'post_type'          => 'shop_order',
-    	    'post_status'        => 'wc-on-hold',
-    	    'meta_key'           => '_payment_method',
-    	    'meta_value'         => 'boleto',
-    	    'date_query'         => array(
-    	    	array(
-    	    		'after'      => array(
-    	    			'year'   => $start_year,
-    	    			'month'  => $start_month,
-    	    			'day'    => $start_day
-    	    		),
-    	    		'before'     => array(
-    	    			'year'   => $end_year,
-    	    			'month'  => $end_month,
-    	    			'day'    => $end_day,
-    	    		),
-    	    		'inclusive'  => true
-    	    	)
-    	    )
+		
+		$args = array(
+   			'numberposts'        => -1,
+   	    	'post_type'          => 'shop_order',
+   	    	'post_status'        => 'all',
+   	    	'meta_key'           => '_payment_method',
+   	    	'meta_value'         => 'boleto',
+   	    	'date_query'         => array(
+   	    		array(
+   	    			'after'      => array(
+   	    				'year'   => $start_year,
+   	    				'month'  => $start_month,
+   	    				'day'    => $start_day
+   	    			),
+   	    			'before'     => array(
+   	    				'year'   => $end_year,
+   	    				'month'  => $end_month,
+   	    				'day'    => $end_day,
+   	    			),
+   	    			'inclusive'  => true
+   	    		)
+ 	    	)
     	);
-    	
-    	$posts = get_posts($args);
-    	
-    	$orders = wp_list_pluck($posts, 'ID');
+
+    	$posts = new WP_Query($args);
+    	$orders = array();
+    	foreach ($posts->get_posts() as $post_order) {
+    		$order = new WC_Order($post_order->ID);
+    		if ($order->status === 'on-hold') {
+    			$orders[] = $order;
+    		}
+    	}
     	
     	return $orders;
 	}
@@ -140,6 +144,6 @@ register_deactivation_hook(__FILE__, array( 'AG_Magma_Lembrete_Boleto', 'deactiv
  * Initialize the plugin.
  */
 //add_action('plugins_loaded', array('AG_Magma_Lembrete_Boleto', 'get_instance'), 0);
-add_action('woocommerce_init', array('AG_Magma_Lembrete_Boleto', 'get_instance'), 0);
+add_action('init', array('AG_Magma_Lembrete_Boleto', 'get_instance'), 100);
 
 endif;
