@@ -4,7 +4,7 @@
  * Depends: Woocommerce, Woocommerce Boleto
  * Plugin URI: http://www.agenciamagma.com.br
  * Description: Send email to on-hold boleto orders with few days left to pay.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: agenciamagma
  * Author URI: http://agenciamagma.com.br
  * License: GPL2
@@ -19,7 +19,7 @@ if (!class_exists('AG_Magma_Lembrete_Boleto')):
 
 class AG_Magma_Lembrete_Boleto {
 
-	const VERSION = '1.0.1';
+	const VERSION = '1.0.2';
 	const DAYS_TO_EXPIRE = 1;
 
 	private static $instance = null;
@@ -61,11 +61,7 @@ class AG_Magma_Lembrete_Boleto {
 				continue;
 			}
 
-			$post_meta = get_post_meta($order->id);
-			$user_email = $post_meta['_billing_email'][0];
-			$user_first_name = $post_meta['_billing_first_name'][0];
-
-			$msg = 'Olá, ' . $user_first_name . '.<br />';
+			$msg = 'Olá, ' . $order->billing_first_name . '.<br />';
 
 			switch($days_left) {
 				case 0:
@@ -80,7 +76,8 @@ class AG_Magma_Lembrete_Boleto {
 
 			$msg .= '<br />Acesse seu boleto <a href="' . WC_Boleto::get_boleto_url($order->order_key) . '">aqui</a>.';
 			
-			wc_mail($user_email, get_bloginfo('name'), $msg);
+			$mailer = WC()->mailer();
+			$mailer->send($order->billing_email, get_bloginfo('name'), $mailer->wrap_message('Ainda não pagou?',  $msg), '', '');
 		}
 	}
 
@@ -143,7 +140,6 @@ register_deactivation_hook(__FILE__, array( 'AG_Magma_Lembrete_Boleto', 'deactiv
 /**
  * Initialize the plugin.
  */
-//add_action('plugins_loaded', array('AG_Magma_Lembrete_Boleto', 'get_instance'), 0);
 add_action('init', array('AG_Magma_Lembrete_Boleto', 'get_instance'), 100);
 
 endif;
