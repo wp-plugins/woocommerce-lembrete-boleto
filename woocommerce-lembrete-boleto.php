@@ -4,7 +4,7 @@
  * Depends: Woocommerce, Woocommerce Boleto
  * Plugin URI: http://www.agenciamagma.com.br
  * Description: Send email to on-hold boleto orders with few days left to pay.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: agenciamagma
  * Author URI: http://agenciamagma.com.br
  * License: GPL2
@@ -19,7 +19,7 @@ if (!class_exists('AG_Magma_Lembrete_Boleto')):
 
 class AG_Magma_Lembrete_Boleto {
 
-	const VERSION = '1.0.2';
+	const VERSION = '1.0.3';
 	const DAYS_TO_EXPIRE = 1;
 
 	private static $instance = null;
@@ -36,11 +36,11 @@ class AG_Magma_Lembrete_Boleto {
 		add_action('ag-magma-lembrete-boleto-verify-orders', array($this, 'verify_orders_and_send_mail'));
 	}
 
-	public static function activation() {
+	public static function activate() {
 		wp_schedule_event(strtotime(date('Y-m-d') . ' 00:00:00'), 'daily', 'ag-magma-lembrete-boleto-verify-orders');
 	}
 
-	public static function deactivation() {
+	public static function deactivate() {
 		wp_clear_scheduled_hook('ag-magma-lembrete-boleto-verify-orders');
 	}
 

@@ -3,8 +3,8 @@ Contributors: agenciamagma, Carlos Cardoso Dias
 Donate link: http://www.agenciamagma.com.br
 Tags: woocommerce boleto, woocommerce lembrete, woocommerce, boleto, lembrete, email
 Requires at least: 4.0.1
-Tested up to: 4.0.1
-Stable tag: 1.0.2
+Tested up to: 4.1
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,10 @@ Yes. The plugin was been tested under woocommerce 2.2.8 and woocommer-boleto 1.4
 
 == Changelog ==
 
+= 1.0.3 =
+* Fixed bug in the plugin activation.
+* Compatibility test with WordPress 4.1.
+
 = 1.0.2 =
 * E-mail with WooCommerce template.
 
@@ -42,6 +46,9 @@ Yes. The plugin was been tested under woocommerce 2.2.8 and woocommer-boleto 1.4
 * First version.
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+This version fixes the `Headers already sent` bug in the plugin activation, it's extremely recomended. This update is strongly recommended for the correct operation of the plugin.
 
 = 1.0.2 =
 This version uses a cool WooCommerce default template for e-mails.
