@@ -3,7 +3,7 @@
  * Plugin Name: Woocommerce Lembrete Boleto
  * Depends: Woocommerce, Woocommerce Boleto
  * Plugin URI: http://www.agenciamagma.com.br
- * Description: Send email to on-hold boleto orders with few days left to pay.
+ * Description: Send email to on-hold boleto orders with few days left to pay. Confira a versão premium de nossos plugins em <a href="http://www.magmastore.com.br/">http://www.magmastore.com.br/</a>.
  * Version: 1.0.3
  * Author: agenciamagma
  * Author URI: http://agenciamagma.com.br
